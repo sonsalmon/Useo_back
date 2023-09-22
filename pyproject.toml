@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "useo-back"
+version = "0.1.0"
+description = ""
+authors = ["sonsalmon <sjmjis0208@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+django = "^4.2.5"
+django-rest-framework = "^0.1.0"
+black = "^23.9.1"
+drf-spectacular = "^0.26.4"
+mypy = "^1.5.1"
+
+#[tool.mypy]
+#plugins = ["mypy_django_plugin.main"]
+django-stubs = "^4.2.4"
+
+[tool.django-stubs]
+django_settings_module = "Useo_back.settings"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
