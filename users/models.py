@@ -21,11 +21,11 @@ class FollowingRelation(models.Model):
     source_user_id = models.OneToOneField(  # type: ignore
         to="User",  #  객체를 직접 매핑하지 않고 문자열로 매핑 -> 순환참조 방지
         on_delete=models.CASCADE,
+        related_name='follower'
     )
     target_user_id = models.ManyToManyField(  # type: ignore
         to="User",
-        null=False,
-        on_delete=models.CASCADE,
+        related_name='followee'
     )
     # class Meta:
     #     constraints = (
