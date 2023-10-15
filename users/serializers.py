@@ -8,7 +8,7 @@ from .models import User
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(
+    nickname = serializers.CharField(
         required=True,
         validators=[UniqueValidator(queryset=User.objects.all())],
     )
@@ -21,7 +21,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('username', 'password', 'password2', 'email')
+        fields = ('username', 'password', 'password2', 'nickname')
 
     def validate(self, data):
         if data['password'] != data['password2']:
@@ -33,7 +33,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(
             username=validated_data['username'],
-            email=validated_data['email'],
+            nickname=validated_data['nickname'],
         )
 
         user.set_password(validated_data['password'])
@@ -49,14 +49,22 @@ class LoginSerializer(serializers.Serializer):
     def validate(self, data):
         user = authenticate(**data)
         if user:
-            token = Token.objects.get(user=user)
-            return token
+            token = Token.objects.get(user=user) #Token에서 유저 찾아서 응답
+            return token,user
+            # return {"token": token.key,
+            #         "nickname" : user.nickname,
+            #         "profile_image" : user.profile_image,
+            #         "profile_message" : user.profile_message
+            #         }
         raise serializers.ValidationError(
             {"error": "Unable to log in with provided credentials."})
 
 
-class ProfileSerializer(serializers.ModelSerializer):
+class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("nickname", "position", "subjects")
-        # extra_kwargs = {"image": {"required": False, "allow_null": True}}
+        fields = ("nickname", "profile_message")
+        extra_kwargs = {"profile_image": {"required": False, "allow_null": True}}
+
+class UserByNicknameSerializer(serializers.Serializer):
+    nickname = serializers.CharField(required=True)

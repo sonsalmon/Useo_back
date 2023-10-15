@@ -14,11 +14,19 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
+from django.shortcuts import redirect
 from django.urls import path, include
 
+# url로 서버 상의 MEDIA_ROOT 접근 제한
+def protected_file(request, path, document_root=None):
+    from django.contrib import messages
+    messages.error(request, "접근 불가")
+    return redirect('/')
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path('users/', include('users.urls'))
-]
+] + static(settings.MEDIA_URL, protected_file, document_root=settings.MEDIA_ROOT)

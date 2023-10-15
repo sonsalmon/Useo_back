@@ -6,7 +6,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 class User(AbstractUser):
-    email = models.EmailField(_("email address"), unique=True)
+    nickname = models.CharField(max_length=10, null=False, unique=True)
 
     profile_image = models.ImageField("프로필 이미지", upload_to="users/profile", blank=True)
     profile_message = models.CharField(max_length=200, blank=True, default="")  # type: ignore
