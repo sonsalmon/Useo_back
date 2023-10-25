@@ -17,6 +17,7 @@ mypy = "^1.5.1"
 #plugins = ["mypy_django_plugin.main"]
 django-stubs = "^4.2.4"
 pillow = "^10.0.1"
+requests = "^2.31.0"
 
 [tool.django-stubs]
 django_settings_module = "Useo_back.settings"

@@ -63,8 +63,9 @@ class LoginSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("nickname", "profile_message")
+        fields = ("nickname", "profile_message", "profile_image")
         extra_kwargs = {"profile_image": {"required": False, "allow_null": True}}
+        # exclude = ("password", "groups", "user_permissions")
 
 class UserByNicknameSerializer(serializers.Serializer):
     nickname = serializers.CharField(required=True)

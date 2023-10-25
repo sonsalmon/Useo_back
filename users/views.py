@@ -35,20 +35,17 @@ class UserView(generics.GenericAPIView):
 
 
     def patch(self, request, *args, **kwargs):
-        print(request.data)
-        print(request.FILES)
         user = User.objects.get(username=request.user)#인증 토큰으로 누군지 확인함.
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        print(user.nickname, data['nickname'])
+        old_image_path = ''
         if user.nickname != data['nickname']:
             user.nickname = data['nickname']
         user.profile_message = data['profile_message']
         if request.data.get('profile_image'):
             old_image_path = user.profile_image.path
             # request.data.get('profile_image').name = user.username + '_profile.png'
-            print(request.data.get('profile_image').name)
             user.profile_image = request.data['profile_image']
         user.save()
 
@@ -59,8 +56,6 @@ class UserView(generics.GenericAPIView):
                         status=status.HTTP_206_PARTIAL_CONTENT)
 
     def get(self, request, *args, **kwargs):
-        print(request.data)
-        print(request.user.profile_image.path)
         user = User.objects.get(username=request.user)
         serializer = self.get_serializer(user)
         # return Response({"nickname": user.nickname, "profile_image": user.profile_image or None, "profile_message":user.profile_message})

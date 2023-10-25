@@ -16,19 +16,19 @@ class Book(models.Model):
     description = models.TextField(default='')
     publisher = models.CharField(max_length=30)
     publish_date = models.DateField()
-    cover_image = models.ImageField(verbose_name='표지 이미지', upload_to=os.path.join,blank=True)
+    cover_image = models.ImageField(verbose_name='표지 이미지', upload_to='books/cover',blank=True)
 
 class ReadingRelation(models.Model):
     class ReadingState(models.TextChoices):
         READING = "reading", "읽는 중이에요"
-        later ='later', '읽을 예정이에요'
-        pause = 'pause', '잠시 멈췄어요'
-        quit = 'quit', '읽다 그만뒀어요'
-        finish = 'finish', '다 읽었어요'
-        never = 'never', '읽지 않을 거에요'
+        LATER ='later', '읽을 예정이에요'
+        PAUSE = 'pause', '잠시 멈췄어요'
+        QUIT = 'quit', '읽다 그만뒀어요'
+        FINISH = 'finish', '다 읽었어요'
+        NEVER = 'never', '읽지 않을 거에요'
 
-    user_id = models.ForeignKey(to=User,null=False,on_delete=models.CASCADE,)
-    book_isbn = models.ForeignKey(to=Book,null=False,on_delete=models.CASCADE,)
+    user = models.ForeignKey(to=User,null=False,on_delete=models.CASCADE,)
+    book = models.ForeignKey(to=Book,null=False,on_delete=models.CASCADE,)
     reading_state = models.CharField(choices=ReadingState.choices, max_length=32)
     reading_duration = models.DurationField()
     add_date = models.DateField()
