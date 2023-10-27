@@ -1,6 +1,6 @@
 import os
 
-from rest_framework import generics, status, permissions
+from rest_framework import generics, status, permissions, serializers
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -14,10 +14,12 @@ from .models import User
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
+    permission_classes = [permissions.AllowAny]
 
 
 class LoginView(generics.GenericAPIView):
     serializer_class = LoginSerializer
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         serializer = self.get_serializer(data=request.data)

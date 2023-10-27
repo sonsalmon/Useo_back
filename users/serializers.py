@@ -61,11 +61,23 @@ class LoginSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    nickname = serializers.CharField(max_length=10)
     class Meta:
         model = User
         fields = ("nickname", "profile_message", "profile_image")
         extra_kwargs = {"profile_image": {"required": False, "allow_null": True}}
-        # exclude = ("password", "groups", "user_permissions")
+        # exclude = ("password", "groups", "user_permissions") # Cannot set both 'fields' and 'exclude' options on serializer UserSerializer.
+
+    def validate_nickname(self, value):
+        instance = self.context['request'].user # request에서 유저정보 가져옴
+        print(instance)
+        # 현재 인스턴스의 닉네임과 입력된 닉네임이 동일한 경우, 검사를 건너뛰고 값을 반환합니다.
+        if instance and instance.nickname == value:
+            return value
+        # 그렇지 않은 경우, 기본 유일성 검사를 수행합니다.
+        if User.objects.filter(nickname=value).exists():
+            raise serializers.ValidationError("user with this nickname already exists.")
+        return value
 
 class UserByNicknameSerializer(serializers.Serializer):
     nickname = serializers.CharField(required=True)
