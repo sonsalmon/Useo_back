@@ -7,8 +7,9 @@ from rest_framework.views import APIView
 
 # from django.contrib.auth.models import User
 
-from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, UserByNicknameSerializer
-from .models import User
+from .serializers import RegisterSerializer, LoginSerializer, UserSerializer, UserByNicknameSerializer, \
+    FollowingRelationSerializer, FollowingRelationListSerializer
+from .models import User, FollowingRelation
 
 
 class RegisterView(generics.CreateAPIView):
@@ -46,7 +47,9 @@ class UserView(generics.GenericAPIView):
             user.nickname = data['nickname']
         user.profile_message = data['profile_message']
         if request.data.get('profile_image'):
-            old_image_path = user.profile_image.path
+            print(request.data['profile_image'])
+            print('프로필 이미지', user.profile_image)
+            old_image_path = user.profile_image.path if user.profile_image else ''
             # request.data.get('profile_image').name = user.username + '_profile.png'
             user.profile_image = request.data['profile_image']
         user.save()
@@ -91,3 +94,39 @@ class UserByNicknameView(APIView):
             return Response({"nickname": user.nickname, "profile_image": user.profile_image or None, "profile_message":user.profile_message})
         except User.DoesNotExist:
             return Response({"error": "해당 닉네임의 유저를 찾을 수 없습니다."}, status=404)
+
+
+class FollowingRelationView(generics.GenericAPIView):
+    serializer_class = FollowingRelationSerializer
+
+    def get(self, request):
+        user = request.user
+        follow_target = User.objects.get(nickname= request.query_params.get('nickname'))
+        print(user)
+        print(follow_target)
+        if user == follow_target:
+            return Response({'error : 자신을 팔로우 할 수 없습니다.'}, status=400)
+        follow_relation, created = FollowingRelation.objects.get_or_create(follower=user,following=follow_target)
+        if not created:
+            follow_relation.delete()
+            return Response({"status": "unfollowed"})
+        else:
+            return Response({"status": "followed"})
+
+
+        return Response({"follower" :user.username, "following" : follow_target.username}, status=200)
+
+class FollowingRelationListView(generics.ListAPIView):
+    serializer_class = FollowingRelationListSerializer
+
+    def get_queryset(self):
+        target_nickname = self.request.query_params.get('nickname', None)
+        user = self.request.user
+
+        # username이 주어지지 않았거나 요청을 보낸 사용자와 일치하는 경우
+        if not target_nickname:
+            return FollowingRelation.objects.filter(follower=user)
+        #
+        # nickname으로 다른 사용자의 정보를 조회하려는 경우 (예: 관리자 등)
+        queryed_user = User.objects.get(nickname=target_nickname)
+        return FollowingRelation.objects.filter(follower=queryed_user)

@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate  #
 from rest_framework import serializers
 from rest_framework.validators import UniqueValidator
 from rest_framework.authtoken.models import Token
-from .models import User
+from .models import User, FollowingRelation
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -81,3 +81,15 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserByNicknameSerializer(serializers.Serializer):
     nickname = serializers.CharField(required=True)
+
+class FollowingRelationSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model=FollowingRelation
+        fields = '__all__'
+
+class FollowingRelationListSerializer(serializers.ModelSerializer):
+    following = UserSerializer()
+    class Meta:
+        model=FollowingRelation
+        fields=['following']
