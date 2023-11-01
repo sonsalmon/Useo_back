@@ -5,41 +5,25 @@ from rest_framework.response import Response
 
 from books.models import ReadingRelation
 from notes.models import Note
-from notes.serializers import NoteSerializer, NoteCreateSerializer
-
-
+from notes.serializers import NoteListCreateSerializer, NoteSerializer
 
 '''
-노트 생성
+노트 생성, 리스트 생성, 특정 독서관계 노트 리스트 조회 -> NoteListCreateView
+노트 상세 조회 
 노트 수정
 노트 삭제
-노트 조회
-노트 리스트 생성
-노트 리스트 조회(독서관계의)
-특정 유저의 노트 리스트 조회
 
 '''
-
-
-
-
-class NoteCreateView(generics.CreateAPIView):
-    serializer_class = NoteCreateSerializer
-
-
-    #create note
-    pass
 # class NoteUpdateDestroyView(generics.UpdateDestroyAPIView):
 #     # get,put,patch,delete note
 #     pass
-class NoteRetrieveView(generics.RetrieveAPIView):
-    pass
 
 
+# 노트 하나 / 리스트 생성, 노트 목록 조회
 class NoteListCreateView(generics.ListCreateAPIView):
     queryset = Note.objects.all()
 
-    serializer_class = NoteSerializer
+    serializer_class = NoteListCreateSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
@@ -80,10 +64,9 @@ class NoteListCreateView(generics.ListCreateAPIView):
 
         return Response(serializer.data,status=status.HTTP_201_CREATED)
 
-class NoteListRetrieveView(generics.ListAPIView):
 
-    # 리스트 조회
-    pass
-class NoteListByUserView(generics.ListAPIView):
-    # 특정 유저 리스트 조회
-    pass
+
+class NoteRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = NoteSerializer
+    queryset = Note.objects.all()
+
