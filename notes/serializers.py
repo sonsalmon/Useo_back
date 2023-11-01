@@ -31,7 +31,7 @@ class NoteSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Note
-        fields = ['book_isbn','content','add_date','last_modify','reading_relation']
+        fields = ['book_isbn','reading_relation','content','add_date','last_modify',]
         extra_kwargs = {
             "reading_relation": {"read_only": True},
             "book_isbn":{"write_only":True},

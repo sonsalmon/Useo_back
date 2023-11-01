@@ -64,9 +64,9 @@ class NoteListCreateView(generics.ListCreateAPIView):
         is_many = isinstance(request.data, list)
         serializer = self.get_serializer(data=request.data, many=is_many)
         serializer.is_valid(raise_exception=True)
+        notes_data=serializer.validated_data
+        user = self.request.user
         if is_many:
-            notes_data=serializer.validated_data
-            user = self.request.user
             notes=[]
             for data in notes_data:
                 book_isbn=data.pop('book_isbn')
@@ -74,7 +74,10 @@ class NoteListCreateView(generics.ListCreateAPIView):
                 notes.append(Note(reading_relation=reading_relation,**data))
             Note.objects.bulk_create(notes)
         else:
-            self.perform_create(serializer)
+            book_isbn=notes_data.pop('book_isbn')
+            reading_relation=get_object_or_404(ReadingRelation,user=user,book__isbn=book_isbn)
+            Note(reading_relation=reading_relation,**serializer.validated_data).save()
+
         return Response(serializer.data,status=status.HTTP_201_CREATED)
 
 class NoteListRetrieveView(generics.ListAPIView):
