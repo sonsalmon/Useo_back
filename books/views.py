@@ -7,7 +7,7 @@ from rest_framework.mixins import UpdateModelMixin
 
 from books.models import ReadingRelation, Book
 from books.serializers import BookSerializer, ReadingRelationCreateSerializer, ReadingRelationListSerializer, \
-   ReadingRelationRetrieveUpdateDestroySerializer
+   ReadingRelationRetrieveUpdateDestroySerializer, ReadingRelationWithNoteSerializer
 from users.models import User
 
 '''

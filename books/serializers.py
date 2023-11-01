@@ -6,10 +6,13 @@ from django.core.files.base import ContentFile
 # from requests import RequestException
 from rest_framework import serializers
 from books.models import Book, ReadingRelation
+from notes.serializers import NoteSerializer
+
 
 # remote url을 받아서 이미지 다운 후 ImageField에 저장하는 custom Field
 class RemoteImageField(serializers.ImageField):
     def to_internal_value(self, data):
+        # 문제점 : 이미 이미지가 있어도 다운?
         print('downloading remote url image...')
         if isinstance(data, str) and data.startswith(('http://', 'https://')):
             try:
@@ -26,17 +29,15 @@ class BookSerializer(serializers.ModelSerializer):
     cover_image = RemoteImageField(required=True)#, source='cover_image')
     class Meta:
         model= Book
-        fields = ['cover_image','isbn', 'title', 'author', 'description', 'publisher', 'publish_date',]
+        fields = ['isbn', 'title', 'author', 'description', 'publisher', 'publish_date','cover_image',]
 
-    def validate(self, data):
-        # remote_image 필드의 값을 검증
-        print('in validate :  ')
-        print(data)
-        cover_image = data.get('cover_image')
-        if not cover_image:
-            raise serializers.ValidationError({"cover_image": ["이미지 URL이 필요합니다."]})
+    def validate_isbn(self, isbn):
+        # ISBN이 이미 존재하는지 확인
+        book = Book.objects.filter(isbn=isbn).first()
+        if book:
+            return book
+        return isbn
 
-        return data
 class ReadingRelationCreateSerializer(serializers.ModelSerializer):
     '''
     두 가지 경우 존재
@@ -45,6 +46,7 @@ class ReadingRelationCreateSerializer(serializers.ModelSerializer):
 
     '''
     book_data = serializers.DictField(write_only=True)
+    # book_data = BookSerializer(source='book')
     class Meta:
         model= ReadingRelation
         fields = ['book_data','reading_state','reading_duration', 'add_date','rate']
@@ -58,22 +60,25 @@ class ReadingRelationCreateSerializer(serializers.ModelSerializer):
         user = self.context['request'].user # request에서 유저정보 가져옴
         book_data = validated_data.pop('book_data')
 
-        # 이미지 다운
-        cover_image_serializer = RemoteImageField()
-        cover_image_path_or_url = book_data.get('cover_image')
-        book_data['cover_image'] = cover_image_serializer.to_internal_value(cover_image_path_or_url)
-
-
-        book, created = Book.objects.get_or_create(
+        book, book_created = Book.objects.get_or_create(
             isbn=book_data.pop('isbn'),
-            defaults=book_data
         )
-        #생성된 게 아니라면 수정
-        if not created:
+        # 책이 새로 생성되었다면 이미지 다운 및 정보 입력
+        if book_created:
+            # 이미지 다운
+            cover_image_serializer = RemoteImageField()
+            cover_image_path_or_url = book_data.get('cover_image')
+            book_data['cover_image'] = cover_image_serializer.to_internal_value(cover_image_path_or_url)
             for key, value in book_data.items():
                 setattr(book, key, value)
             book.save()
-        reading_relation = ReadingRelation.objects.create(book=book, user=user, **validated_data)
+
+        reading_relation, created= ReadingRelation.objects.get_or_create(book=book, user=user, **validated_data)
+        # 관계가 이미 존재하면 해당 관계를 수정
+        if not created:
+            for key, value in validated_data.items():
+                setattr(reading_relation, key, value)
+            reading_relation.save()
         return reading_relation
 
 # 독서 관계의 리스트
@@ -90,4 +95,16 @@ class ReadingRelationRetrieveUpdateDestroySerializer(serializers.ModelSerializer
     class Meta:
         model = ReadingRelation
         fields= ['book_data', 'reading_state', 'add_date', 'rate']
+        # extra_kwargs ={"user": {"read_only": True,  },
+        #                "book": {"read_only": True}
+        #                }
         # exclude = ['user','book']
+
+
+
+
+class ReadingRelationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model=ReadingRelation
+        fields='__all__'
+
