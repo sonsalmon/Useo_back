@@ -49,11 +49,12 @@ class ReadingRelationCreateSerializer(serializers.ModelSerializer):
     # book_data = BookSerializer(source='book')
     class Meta:
         model= ReadingRelation
-        fields = ['book_data','reading_state','reading_duration', 'add_date','rate']
+        fields = ['book_data','reading_state','reading_progress','reading_duration', 'add_date','rate']
         # 다른 유저의 서재에서 책을 추가할 경우 아래 필드 없을 수 있음.
         extra_kwargs = {"reading_state": {"required": False, "allow_null": True, "default": 'READING'},
                         "reading_duration": {"required": False, "allow_null": True},
                         "rate": {"required": False, "allow_null": True},
+                        "reading_progress":{"required": False},
                         }
     def create(self, validated_data):
         print(validated_data)
@@ -83,21 +84,23 @@ class ReadingRelationCreateSerializer(serializers.ModelSerializer):
 
 # 독서 관계의 리스트
 class ReadingRelationListSerializer(serializers.ModelSerializer):
-    cover_image = serializers.ImageField(source='book.cover_image')
+    # cover_image = serializers.ImageField(source='book.cover_image')
     nickname = serializers.CharField(source='user.nickname')
+    # author = serializers.CharField(source='book.author')
+    book_data = BookSerializer(source='book')
     class Meta:
         model = ReadingRelation
-        fields =['cover_image', 'book', 'nickname']
+        # fields =['cover_image', 'book', 'nickname', 'author', 'reading_state']
+        fields =['book_data','nickname', 'reading_state', 'reading_duration','add_date', 'rate']
 
 class ReadingRelationRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
     book_data = BookSerializer(read_only=True, source='book')
 
     class Meta:
         model = ReadingRelation
-        fields= ['book_data', 'reading_state', 'add_date', 'rate']
-        # extra_kwargs ={"user": {"read_only": True,  },
-        #                "book": {"read_only": True}
-        #                }
+        fields= ['book_data', 'reading_state', 'reading_progress','reading_duration', 'rate', 'add_date']
+        extra_kwargs ={"add_date":{"read_only" : True}
+                       }
         # exclude = ['user','book']
 
 

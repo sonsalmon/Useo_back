@@ -9,5 +9,5 @@ from books.models import Book,ReadingRelation
 class Note(models.Model):
     reading_relation = models.ForeignKey(to=ReadingRelation, null=False, on_delete=models.CASCADE)
     content = models.TextField()
-    add_date = models.DateField()
-    last_modify = models.DateField()
+    add_date = models.DateTimeField(auto_now_add=True)
+    last_modify = models.DateTimeField(auto_now=True)

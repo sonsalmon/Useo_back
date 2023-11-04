@@ -40,5 +40,6 @@ class ReadingRelation(models.Model):
     book = models.ForeignKey(to=Book,null=False,on_delete=models.CASCADE,)
     reading_state = models.CharField(choices=ReadingState.choices, max_length=32)
     reading_duration = models.DurationField()
-    add_date = models.DateField()
-    rate = models.FloatField()
+    reading_progress = models.FloatField(default=0)
+    add_date = models.DateTimeField(auto_now_add=True)
+    rate = models.FloatField(null=True)
