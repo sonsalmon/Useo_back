@@ -91,7 +91,7 @@ class ReadingRelationListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReadingRelation
         # fields =['cover_image', 'book', 'nickname', 'author', 'reading_state']
-        fields =['book_data','nickname', 'reading_state', 'reading_duration','add_date', 'rate']
+        fields =['book_data','nickname', 'reading_state', 'reading_duration','reading_progress','add_date', 'rate']
 
 class ReadingRelationRetrieveUpdateDestroySerializer(serializers.ModelSerializer):
     book_data = BookSerializer(read_only=True, source='book')
@@ -99,7 +99,8 @@ class ReadingRelationRetrieveUpdateDestroySerializer(serializers.ModelSerializer
     class Meta:
         model = ReadingRelation
         fields= ['book_data', 'reading_state', 'reading_progress','reading_duration', 'rate', 'add_date']
-        extra_kwargs ={"add_date":{"read_only" : True}
+        extra_kwargs ={"add_date":{"read_only" : True},
+                       "book_data":{"read_only": True}
                        }
         # exclude = ['user','book']
 
