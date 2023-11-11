@@ -35,12 +35,15 @@ class NoteListCreateView(generics.ListCreateAPIView):
         print(nickname)
         queryset = Note.objects
 
-        if (nickname is not None) & (isbn is not None):
-            print(isbn)
+        #특정 독서 관계에 대한 노트
+        if (nickname is not None):
 
             queryset =queryset.filter(reading_relation__user__nickname=nickname)
+            if isbn is None: #해당 유저의 모든 노트
+                return queryset
             queryset = queryset.filter(reading_relation__book__isbn=isbn)
             return queryset
+
 
         # 현재 인증된 사용자의 메모만 조회
         return Note.objects.filter(reading_relation__user_id=self.request.user.pk)
@@ -50,6 +53,7 @@ class NoteListCreateView(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         notes_data=serializer.validated_data
         user = self.request.user
+        print(notes_data)
         if is_many:
             notes=[]
             for data in notes_data:

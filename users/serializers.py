@@ -64,7 +64,7 @@ class UserSerializer(serializers.ModelSerializer):
     nickname = serializers.CharField(max_length=10)
     class Meta:
         model = User
-        fields = ("nickname", "profile_message", "profile_image")
+        fields = ("id","nickname", "profile_message", "profile_image","library_longitude", "library_latitude")
         extra_kwargs = {"profile_image": {"required": False, "allow_null": True}}
         # exclude = ("password", "groups", "user_permissions") # Cannot set both 'fields' and 'exclude' options on serializer UserSerializer.
 

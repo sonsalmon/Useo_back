@@ -1,5 +1,6 @@
 import os
 
+from django.db.models import Q
 from rest_framework import generics, status, permissions, serializers
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
@@ -61,7 +62,13 @@ class UserView(generics.GenericAPIView):
                         status=status.HTTP_206_PARTIAL_CONTENT)
 
     def get(self, request, *args, **kwargs):
-        user = User.objects.get(username=request.user)
+        # user = User.objects.get(username=request.user)
+        nickname = request.query_params.get('nickname', None)
+
+        if nickname:
+            user = User.objects.get(username_nickname=nickname)
+        else:
+            user = User.objects.get(username=request.user)
         serializer = self.get_serializer(user)
         # return Response({"nickname": user.nickname, "profile_image": user.profile_image or None, "profile_message":user.profile_message})
         return Response(serializer.data)
@@ -96,37 +103,70 @@ class UserByNicknameView(APIView):
             return Response({"error": "해당 닉네임의 유저를 찾을 수 없습니다."}, status=404)
 
 
+class UserListByContainedKeyword(generics.ListAPIView):
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        current_user = self.request.user
+        queryset = User.objects.all().exclude(id=current_user.id) #현재 사용자 제외
+        search_keyword = self.request.query_params.get('query', None)
+        print(search_keyword)
+        if search_keyword:
+            queryset = queryset.filter(
+                Q(nickname__icontains=search_keyword) # icontains : 대소문자 구분 x
+            )
+        else :
+            print('no keword');
+        return queryset
+
+
 class FollowingRelationView(generics.GenericAPIView):
     serializer_class = FollowingRelationSerializer
 
+    # 유저 팔로우 하기
     def get(self, request):
         user = request.user
         follow_target = User.objects.get(nickname= request.query_params.get('nickname'))
+        want_to_check = request.query_params.get('wantToCheck',None)
         print(user)
         print(follow_target)
         if user == follow_target:
             return Response({'error : 자신을 팔로우 할 수 없습니다.'}, status=400)
-        follow_relation, created = FollowingRelation.objects.get_or_create(follower=user,following=follow_target)
-        if not created:
-            follow_relation.delete()
-            return Response({"status": "unfollowed"})
+        #팔로우 중인지 확인
+        if want_to_check == 'true':
+            follow_relation_exist = FollowingRelation.objects.filter(follower=user, following=follow_target).exists()
+            if follow_relation_exist:
+                return Response({"follow": "true"})
+            else:
+                return Response({"follow": "false"})
+
+
+        # 팔로우 토글 실행
         else:
-            return Response({"status": "followed"})
+            follow_relation, created = FollowingRelation.objects.get_or_create(follower=user,following=follow_target)
+            if not created:
+                follow_relation.delete()
+                return Response({"follow": "false"})
+            else:
+                return Response({"follow": "true"})
 
 
         return Response({"follower" :user.username, "following" : follow_target.username}, status=200)
 
 class FollowingRelationListView(generics.ListAPIView):
-    serializer_class = FollowingRelationListSerializer
+    # serializer_class = FollowingRelationListSerializer
+    serializer_class = UserSerializer
 
     def get_queryset(self):
         target_nickname = self.request.query_params.get('nickname', None)
         user = self.request.user
 
-        # username이 주어지지 않았거나 요청을 보낸 사용자와 일치하는 경우
-        if not target_nickname:
-            return FollowingRelation.objects.filter(follower=user)
-        #
-        # nickname으로 다른 사용자의 정보를 조회하려는 경우 (예: 관리자 등)
-        queryed_user = User.objects.get(nickname=target_nickname)
-        return FollowingRelation.objects.filter(follower=queryed_user)
+        following = user.followings.values_list('following', flat=True)
+        return User.objects.filter(id__in=following)
+        # # username이 주어지지 않았거나 요청을 보낸 사용자와 일치하는 경우
+        # if not target_nickname:
+        #     return FollowingRelation.objects.filter(follower=user)
+        # #
+        # # nickname으로 다른 사용자의 정보를 조회하려는 경우 (예: 관리자 등)
+        # queryed_user = User.objects.get(nickname=target_nickname)
+        # return FollowingRelation.objects.filter(follower=queryed_user)
