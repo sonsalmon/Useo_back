@@ -44,15 +44,21 @@ class UserView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
         old_image_path = ''
-        if user.nickname != data['nickname']:
-            user.nickname = data['nickname']
-        user.profile_message = data['profile_message']
-        if request.data.get('profile_image'):
+        if data.get('nickname'): # 받았으면 수정
+            if user.nickname != data['nickname']:
+                user.nickname = data['nickname']
+        if data.get('profile_image'): # 받았으면 수정
             print(request.data['profile_image'])
             print('프로필 이미지', user.profile_image)
             old_image_path = user.profile_image.path if user.profile_image else ''
             # request.data.get('profile_image').name = user.username + '_profile.png'
-            user.profile_image = request.data['profile_image']
+            user.profile_image = data['profile_image']
+        if data.get('profile_message'): # 받았으면 수정
+            user.profile_message = data['profile_message']
+        if data.get('library_longitude'): # 받았으면 수정
+            user.library_longitude = data['library_longitude']
+        if request.data.get('library_latitude'): # 받았으면 수정
+            user.library_latitude = data['library_latitude']
         user.save()
 
         #기존 프로필 이미지 삭제

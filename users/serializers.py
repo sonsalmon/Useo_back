@@ -61,11 +61,16 @@ class LoginSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    nickname = serializers.CharField(max_length=10)
+    nickname = serializers.CharField(max_length=10, required=False)
     class Meta:
         model = User
         fields = ("id","nickname", "profile_message", "profile_image","library_longitude", "library_latitude")
-        extra_kwargs = {"profile_image": {"required": False, "allow_null": True}}
+        extra_kwargs = {"profile_image": {"required": False, "allow_null": True},
+                        "nickname":{"required":False},
+                        "profile_message":{"required":False},
+                        "library_longitude":{"required":False},
+                        "library_latitude":{"required":False},
+                        }
         # exclude = ("password", "groups", "user_permissions") # Cannot set both 'fields' and 'exclude' options on serializer UserSerializer.
 
     def validate_nickname(self, value):
