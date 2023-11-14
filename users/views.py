@@ -123,6 +123,7 @@ class UserListByContainedKeyword(generics.ListAPIView):
                 Q(nickname__icontains=search_keyword) # icontains : 대소문자 구분 x
             )
         else :
+            queryset = User.objects.none()
             print('no keword');
         return queryset
 
@@ -143,8 +144,8 @@ class UserListByNearPosition(generics.ListAPIView):
         condition=(
             Q(library_latitude__range = (latitude - (self.LATITUDE_ONE_KM * 20),latitude + (self.LATITUDE_ONE_KM * 20))) &
             Q(library_longitude__range = (longitude - (self.LONGITUDE_ONE_KM * 20),longitude + (self.LONGITUDE_ONE_KM * 20)))&
-            Q(is_staff=False)&
-            Q(id != self.request.user.id) #현재 사용자 제외
+            Q(is_staff=False)
+            # Q(id != self.request.user.id) #현재 사용자 제외
         )
         user_queryset = User.objects.filter(condition)
         sorted_by_distance = sorted(user_queryset, key=lambda info:haversine(user_position,(info.library_latitude,info.library_longitude)))
