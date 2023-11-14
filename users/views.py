@@ -1,6 +1,7 @@
 import os
 
 from django.db.models import Q
+from haversine import haversine
 from rest_framework import generics, status, permissions, serializers
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
@@ -124,6 +125,44 @@ class UserListByContainedKeyword(generics.ListAPIView):
         else :
             print('no keword');
         return queryset
+
+class UserListByNearPosition(generics.ListAPIView):
+    serializer_class =UserSerializer
+
+    LATITUDE_ONE_KM = 0.01  #   약 1KM에 해당하는 위도 값 차이
+    LONGITUDE_ONE_KM = 0.015    # 약 1KM에 해당하는 경도 값 차이
+    검색_반경 = 10
+
+
+
+    def get_queryset(self):
+        print('거리 구하는 함수')
+        latitude = float(self.request.query_params.get('library_latitude', 0))
+        longitude = float(self.request.query_params.get('library_longitude', 0))
+        user_position = (latitude, longitude)
+        condition=(
+            Q(library_latitude__range = (latitude - (self.LATITUDE_ONE_KM * 20),latitude + (self.LATITUDE_ONE_KM * 20))) &
+            Q(library_longitude__range = (longitude - (self.LONGITUDE_ONE_KM * 20),longitude + (self.LONGITUDE_ONE_KM * 20)))&
+            Q(is_staff=False)&
+            Q(id != self.request.user.id) #현재 사용자 제외
+        )
+        user_queryset = User.objects.filter(condition)
+        sorted_by_distance = sorted(user_queryset, key=lambda info:haversine(user_position,(info.library_latitude,info.library_longitude)))
+        print(user_queryset.exists)
+
+        return sorted_by_distance[:self.검색_반경]
+    def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.serializer_class(queryset,many=True)
+        return Response(serializer.data)
+
+
+
+
+
+
+
+
 
 
 class FollowingRelationView(generics.GenericAPIView):

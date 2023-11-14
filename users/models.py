@@ -6,13 +6,13 @@ from django.utils.translation import gettext_lazy as _
 
 
 class User(AbstractUser):
-    nickname = models.CharField(max_length=10, null=False, unique=True)
+    nickname = models.CharField(max_length=10, null=False, blank= False,unique=True)
 
     profile_image = models.ImageField("프로필 이미지", upload_to="users/profile", blank=True)
-    profile_message = models.CharField(max_length=200, blank=True, null=True, default="")  # type: ignore
+    profile_message = models.CharField(max_length=200, blank=True, default="")  # type: ignore
 
-    library_latitude = models.FloatField(null=True)  # type: ignore # 위도
-    library_longitude = models.FloatField(null=True)  # type: ignore # 경도
+    library_latitude = models.FloatField(blank=True, null=True)  # type: ignore # 위도
+    library_longitude = models.FloatField(blank=True, null=True)  # type: ignore # 경도
 
 
 #  source 유저가 target 유저를 팔로우한다.
