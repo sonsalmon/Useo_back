@@ -92,22 +92,6 @@ class UserView(generics.GenericAPIView):
     #         return Response({"error": "해당 닉네임의 유저를 찾을 수 없습니다."}, status=404)
 
 
-class UserByNicknameView(APIView):
-    serializer_class = UserByNicknameSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-
-    queryset = User.objects.all()
-    lookup_field = 'nickrname'
-    lookup_url_kwarg = 'nickname'
-    def get(self, request, *args, **kwargs):
-        nickname = request.query_params.get('nickname')
-        if not nickname:
-            return Response({"error": "닉네임을 제공해주세요."}, status=400)
-        try:
-            user = User.objects.get(nickname=nickname)
-            return Response({"nickname": user.nickname, "profile_image": user.profile_image or None, "profile_message":user.profile_message})
-        except User.DoesNotExist:
-            return Response({"error": "해당 닉네임의 유저를 찾을 수 없습니다."}, status=404)
 
 
 class UserListByContainedKeyword(generics.ListAPIView):
@@ -147,15 +131,15 @@ class UserListByNearPosition(generics.ListAPIView):
             Q(is_staff=False)
             # Q(id != self.request.user.id) #현재 사용자 제외
         )
-        user_queryset = User.objects.filter(condition)
+        user_queryset = User.objects.filter(condition).exclude(id=self.request.user.id)
         sorted_by_distance = sorted(user_queryset, key=lambda info:haversine(user_position,(info.library_latitude,info.library_longitude)))
         print(user_queryset.exists)
 
         return sorted_by_distance[:self.검색_반경]
-    def get(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        serializer = self.serializer_class(queryset,many=True)
-        return Response(serializer.data)
+    # def get(self, request, *args, **kwargs):
+    #     queryset = self.get_queryset()
+    #     serializer = self.serializer_class(queryset,many=True)
+    #     return Response(serializer.data)
 
 
 
